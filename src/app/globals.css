@@ -327,3 +327,36 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4ede5;box-shadow:0 0 0 1000px #
 .danger-button{background:#9e293e;color:#fff7f2}
 .danger-button:hover:not(:disabled){background:#ba354c}
 @media(max-width:700px){.delete-actions .button{flex:1}}
+
+/* Keep the complete signup and draw journey usable on narrow phones. */
+.big-button{max-width:100%;white-space:normal;text-align:center;line-height:1.35}
+.text-button,.remove-button{min-height:44px}
+.review-actions .button,.rejected-list .button,.signup-link .button{min-height:44px}
+a.toplink{display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:700px){
+  .registration-wrap,.draw-page,.dashboard{overflow-x:clip}
+  .big-button{width:100%;gap:10px}
+  .person-row{grid-template-columns:minmax(0,1fr) 44px}
+  .person-index{grid-column:1;grid-row:1}
+  .person-row input,.person-row input[type=email]{grid-column:1/-1;grid-row:auto}
+  .person-row .remove-button{grid-column:2;grid-row:1;width:44px}
+  .dashboard-photo,.registration-photo-right,.draw-photo-right{right:0}
+  .dashboard .head-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}
+  .dashboard .head-actions .primary{grid-column:1/-1}
+  .dashboard .head-actions .text-button{width:100%}
+  .form-actions{flex-direction:column-reverse}
+  .form-actions .button{width:100%}
+}
+@media(max-width:380px){
+  .shell{padding-inline:18px}
+  .topbar{gap:12px}
+  .toplink{letter-spacing:.07em}
+  .dashboard-head h1{font-size:44px}
+  .draw-intro h1{font-size:clamp(36px,11vw,43px)}
+  .draw-card h2{font-size:27px;overflow-wrap:anywhere}
+  .participant-panel{padding:30px 20px}
+  .participant-panel h2{font-size:28px}
+  .registration-panel{padding:25px}
+  .registration-panel h1{font-size:37px}
+  .head-actions{gap:8px}
+}
