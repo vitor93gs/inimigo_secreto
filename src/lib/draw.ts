@@ -1,10 +1,19 @@
 import { randomInt } from "node:crypto";
 
 export type Participant = { id: string; name: string; email: string };
+export type SignupRequest = {
+  id: string;
+  name: string;
+  email: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: Date;
+  reviewedAt?: Date;
+};
 export type Draw = {
   _id: string;
   name: string;
   participants: Participant[];
+  signups?: SignupRequest[];
   assignments: Record<string, string>;
   status: "draft" | "published";
   version: number;

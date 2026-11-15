@@ -45,6 +45,47 @@ try {
   assert.match(admin.response.headers.get("location") || "", /\/admin$/);
   assert.match((await api(`/api/auth/verify?token=${admin.token}`)).response.headers.get("location") || "", /acesso-invalido/);
 
+  const open = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Inscrições abertas", participants: [] } });
+  assert.equal(open.response.status, 201);
+  const signupId = open.data.draw.id;
+  const publicSignup = await api(`/api/inscricoes/${signupId}`);
+  assert.equal(publicSignup.data.draw.name, "Inscrições abertas");
+  assert.equal(JSON.stringify(publicSignup.data).includes("participants"), false);
+  assert.equal((await api(`/api/draws/${signupId}`)).response.status, 404);
+  assert.equal((await api(`/api/inscricoes/${signupId}`, { method: "POST", body: { name: "Sem email", email: "errado" } })).response.status, 400);
+  const requests = [
+    { name: "Alice", email: "ALICE@test.example" },
+    { name: "Bruno", email: "bruno@test.example" },
+    { name: "Carla", email: "carla@test.example" },
+  ];
+  const submitted = await Promise.all(requests.map((person) => api(`/api/inscricoes/${signupId}`, { method: "POST", body: person })));
+  assert.ok(submitted.every((result) => result.response.status === 202));
+  const duplicates = await Promise.all([1, 2].map(() => api(`/api/inscricoes/${signupId}`, { method: "POST", body: requests[0] })));
+  assert.ok(duplicates.every((result) => result.response.status === 202));
+  let signupDraw = await db.collection(process.env.MONGODB_DRAWS_COLLECTION || "draws").findOne({ _id: signupId });
+  assert.equal(signupDraw.signups.length, 3);
+  assert.ok(signupDraw.signups.some((entry) => entry.email === "alice@test.example"));
+  assert.equal((await api(`/api/admin/draws/${signupId}/publish`, { method: "POST", cookie: admin.cookie })).response.status, 400);
+  assert.equal((await api(`/api/admin/draws/${signupId}`, { method: "PATCH", cookie: admin.cookie, body: { name: "Conflito", participants: [{ name: "Alice", email: "alice@test.example" }] } })).response.status, 409);
+  const aliceRequest = signupDraw.signups.find((entry) => entry.email === "alice@test.example").id;
+  const brunoRequest = signupDraw.signups.find((entry) => entry.email === "bruno@test.example").id;
+  const carlaRequest = signupDraw.signups.find((entry) => entry.email === "carla@test.example").id;
+  assert.equal((await api(`/api/admin/draws/${signupId}/inscricoes/${aliceRequest}`, { method: "POST", body: { decision: "approve" } })).response.status, 401);
+  assert.equal((await api(`/api/admin/draws/${signupId}/inscricoes/${aliceRequest}`, { method: "POST", cookie: admin.cookie, body: { decision: "approve" } })).response.status, 200);
+  assert.equal((await api(`/api/admin/draws/${signupId}/inscricoes/${carlaRequest}`, { method: "POST", cookie: admin.cookie, body: { decision: "approve" } })).response.status, 200);
+  assert.equal((await api(`/api/admin/draws/${signupId}`, { method: "PATCH", cookie: admin.cookie, body: { name: "Inscrições abertas", participants: [{ name: "Alice", email: "alice@test.example" }] } })).response.status, 200);
+  signupDraw = await db.collection(process.env.MONGODB_DRAWS_COLLECTION || "draws").findOne({ _id: signupId });
+  assert.equal(signupDraw.signups.find((entry) => entry.id === carlaRequest).status, "rejected");
+  assert.equal((await api(`/api/admin/draws/${signupId}/inscricoes/${carlaRequest}`, { method: "POST", cookie: admin.cookie, body: { decision: "approve" } })).response.status, 200);
+  assert.equal((await api(`/api/admin/draws/${signupId}/publish`, { method: "POST", cookie: admin.cookie })).response.status, 409);
+  assert.equal((await api(`/api/admin/draws/${signupId}/inscricoes/${brunoRequest}`, { method: "POST", cookie: admin.cookie, body: { decision: "reject" } })).response.status, 200);
+  signupDraw = await db.collection(process.env.MONGODB_DRAWS_COLLECTION || "draws").findOne({ _id: signupId });
+  assert.equal(signupDraw.participants.length, 2);
+  assert.equal(signupDraw.signups.find((entry) => entry.id === brunoRequest).status, "rejected");
+  assert.equal((await api(`/api/admin/draws/${signupId}/publish`, { method: "POST", cookie: admin.cookie })).response.status, 200);
+  assert.equal((await api(`/api/inscricoes/${signupId}`, { method: "POST", body: { name: "Tarde", email: "late@test.example" } })).response.status, 409);
+  assert.equal((await api(`/api/inscricoes/${signupId}`)).data.draw.status, "published");
+
   const first = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Novembro 2026", participants: people } });
   const second = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Dezembro 2026", participants: people } });
   assert.equal(first.response.status, 201);
@@ -80,7 +121,7 @@ try {
   const otherRound = await signIn(people[0].email, b);
   assert.equal((await api(`/api/draws/${b}/pick`, { method: "POST", cookie: otherRound.cookie })).response.status, 200);
   assert.equal((await api(`/api/draws/${b}`)).data.draw.completed, 1);
-  console.log("Integration checks passed: authentication, isolation, publishing, privacy, and concurrent picks.");
+  console.log("Integration checks passed: signup review, publication gates, authentication, isolation, privacy, and concurrent picks.");
 } finally {
   await db.dropDatabase();
   await client.close();
