@@ -19,3 +19,14 @@ export function emailSendError(error: unknown) {
   }
   return "Não foi possível enviar o email. Confira os Logs do Resend para identificar o erro.";
 }
+
+export function gmailSendError(error: unknown) {
+  const details = error && typeof error === "object" ? error as { code?: unknown; responseCode?: unknown } : {};
+  if (details.code === "EAUTH" || details.responseCode === 535) {
+    return "O Gmail recusou o acesso SMTP. Confira GMAIL_USER e a senha de app do Google em GMAIL_APP_PASSWORD.";
+  }
+  if (details.code === "ECONNECTION" || details.code === "ETIMEDOUT") {
+    return "Não foi possível conectar ao Gmail SMTP. Tente novamente em instantes.";
+  }
+  return "Não foi possível enviar pelo Gmail. Confira os registros da função na Vercel.";
+}
