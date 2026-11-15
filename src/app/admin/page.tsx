@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { readApiResponse } from "@/lib/api-response";
 
 type Person = { name: string; email: string };
 type AdminDraw = { id: string; name: string; status: "draft" | "published"; participants: number; completed: number; participantsList: Person[] };
@@ -23,7 +24,7 @@ export default function AdminPage() {
     try {
       const response = await fetch("/api/admin/draws", { cache: "no-store" });
       setAuthorized(response.ok);
-      if (response.ok) setDraws((await response.json()).draws);
+      if (response.ok) setDraws((await readApiResponse<{ draws: AdminDraw[] }>(response)).draws);
     } catch { setMessage("Não foi possível conectar. Tente novamente."); }
     finally { setLoading(false); }
   }, []);
@@ -35,7 +36,7 @@ export default function AdminPage() {
     event.preventDefault(); setBusy(true); setMessage("");
     try {
       const response = await fetch("/api/auth/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
-      const data = await response.json();
+      const data = await readApiResponse<object>(response);
       if (!response.ok) throw new Error(data.error);
       setSent(true);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Erro ao enviar email."); }
@@ -53,7 +54,7 @@ export default function AdminPage() {
     try {
       const path = editor === "new" ? "/api/admin/draws" : `/api/admin/draws/${editor}`;
       const response = await fetch(path, { method: editor === "new" ? "POST" : "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, participants: people }) });
-      const data = await response.json();
+      const data = await readApiResponse<object>(response);
       if (!response.ok) throw new Error(data.error);
       setEditor(null); await load(); setMessage("Rascunho salvo. Revise os participantes antes de publicar.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar."); }
@@ -65,7 +66,7 @@ export default function AdminPage() {
     setBusy(true); setMessage("");
     try {
       const response = await fetch(`/api/admin/draws/${draw.id}/publish`, { method: "POST" });
-      const data = await response.json();
+      const data = await readApiResponse<object>(response);
       if (!response.ok) throw new Error(data.error);
       await load(); setMessage("Sorteio publicado. Agora você pode compartilhar o link.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível publicar."); }

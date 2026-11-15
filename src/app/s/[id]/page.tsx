@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { readApiResponse } from "@/lib/api-response";
 
 type State = { draw: { id: string; name: string; participants: number; completed: number }; me: { name: string; recipient: string | null } | null };
 
@@ -18,8 +19,9 @@ function DrawContent() {
   const load = useCallback(async () => {
     try {
       const response = await fetch(`/api/draws/${id}`, { cache: "no-store" });
-      if (!response.ok) throw new Error((await response.json()).error || "Não foi possível abrir o sorteio.");
-      setState(await response.json());
+      const data = await readApiResponse<State>(response);
+      if (!response.ok) throw new Error(data.error);
+      setState(data);
     } catch (issue) { setError(issue instanceof Error ? issue.message : "Erro ao carregar sorteio."); }
     finally { setLoading(false); }
   }, [id]);
@@ -31,7 +33,7 @@ function DrawContent() {
     event.preventDefault(); setBusy(true); setError("");
     try {
       const response = await fetch("/api/auth/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, drawId: id }) });
-      const data = await response.json();
+      const data = await readApiResponse<object>(response);
       if (!response.ok) throw new Error(data.error);
       setSent(true);
     } catch (issue) { setError(issue instanceof Error ? issue.message : "Não foi possível enviar o link."); }
@@ -42,7 +44,7 @@ function DrawContent() {
     setBusy(true); setError("");
     try {
       const response = await fetch(`/api/draws/${id}/pick`, { method: "POST" });
-      const data = await response.json();
+      const data = await readApiResponse<object>(response);
       if (!response.ok) throw new Error(data.error);
       await load();
     } catch (issue) { setError(issue instanceof Error ? issue.message : "Não foi possível sortear."); }
