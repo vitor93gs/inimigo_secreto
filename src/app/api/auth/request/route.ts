@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (drawId) {
     const draw = await db.collection<Draw>(DRAW_COLLECTION).findOne({ _id: drawId, status: "published" });
     allowed = !!draw?.participants.some((person) => person.email === email);
-    drawName = draw?.name || "Amigo Secreto";
+    drawName = draw?.name || "Inimigo Secreto";
   }
   if (!allowed) return NextResponse.json(generic);
 
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
   const url = new URL("/api/auth/verify", appUrl!);
   url.searchParams.set("token", token);
   const safeName = drawName.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
-  const subject = `Seu acesso ao ${drawName}`;
-  const html = `<p>Seu link para acessar <strong>${safeName}</strong>:</p><p><a href="${url.toString()}">Entrar no Amigo Secreto</a></p><p>O link vale por 15 minutos e só pode ser usado uma vez.</p>`;
+  const subject = `Inimigo Secreto: seu acesso a ${drawName}`;
+  const html = `<p>Você foi convocado para <strong>${safeName}</strong>.</p><p><a href="${url.toString()}">Entrar no Inimigo Secreto</a></p><p>Este link desaparece em 15 minutos e só funciona uma vez. O presente ruim é responsabilidade sua.</p>`;
   try {
     if (provider === "gmail") {
       const transport = nodemailer.createTransport({
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         auth: { user: from, pass: process.env.GMAIL_APP_PASSWORD!.replace(/\s/g, "") },
         connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
       });
-      await transport.sendMail({ from: { name: "Amigo Secreto", address: from }, to: email, subject, html });
+      await transport.sendMail({ from: { name: "Inimigo Secreto", address: from }, to: email, subject, html });
     } else {
       const result = await new Resend(process.env.RESEND_API_KEY!).emails.send({ from, to: email, subject, html });
       if (result.error) throw result.error;

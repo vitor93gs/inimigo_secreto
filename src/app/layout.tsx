@@ -6,8 +6,8 @@ const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "Amigo Secreto — uma surpresa para cada encontro",
-  description: "Organize sorteios de amigo secreto com seus amigos, de forma simples e privada.",
+  title: "Inimigo Secreto — presentes, suspeitas e segundas intenções",
+  description: "Organize sorteios de inimigo secreto com seus amigos. Descubra seu alvo e preserve o pouco que resta da amizade.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

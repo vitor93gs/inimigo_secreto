@@ -1,4 +1,4 @@
-# Amigo Secreto
+# Inimigo Secreto
 
 Site em português para organizar vários sorteios privados. O organizador cria um rascunho com nome, participantes e emails, publica e compartilha um link. Cada participante confirma o email com um link de uso único e sorteia uma pessoa distinta, sem tirar a si mesmo.
 
