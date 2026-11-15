@@ -32,10 +32,11 @@ Depois de salvar as variáveis, faça um **Redeploy** da implantação de produ�
 
 ## Regras e segurança
 
-- `ADMIN_EMAIL` é o único email que pode criar, editar ou publicar sorteios.
+- `ADMIN_EMAIL` é o único email que pode criar, editar, publicar ou excluir sorteios.
 - A lista de um sorteio publicado é fixa. Rascunhos podem ser editados.
 - O link de inscrição funciona enquanto o sorteio é um rascunho. Pedidos de entrada mostram nome e email apenas ao organizador. A inscrição não confirma a propriedade do email; o link de acesso por email é exigido para participar depois da publicação.
 - O organizador precisa resolver todos os pedidos pendentes e ter ao menos duas pessoas na lista antes de publicar. A publicação encerra as inscrições.
+- O organizador pode excluir um rascunho ou sorteio publicado após digitar seu nome para confirmar. A exclusão apaga participantes, inscrições e resultados daquele sorteio; os links deixam de funcionar.
 - O mesmo email pode aparecer em sorteios diferentes, mas apenas uma vez em cada sorteio.
 - Links de entrada expiram em 15 minutos e são consumidos uma vez. A sessão dura 30 dias; ela pode ser encerrada pelo organizador no painel.
 - Um link compartilhado identifica o sorteio, mas não dá acesso a resultados. Cada pessoa vê apenas o próprio resultado após confirmar seu email.

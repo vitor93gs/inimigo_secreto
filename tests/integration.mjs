@@ -86,6 +86,16 @@ try {
   assert.equal((await api(`/api/inscricoes/${signupId}`, { method: "POST", body: { name: "Tarde", email: "late@test.example" } })).response.status, 409);
   assert.equal((await api(`/api/inscricoes/${signupId}`)).data.draw.status, "published");
 
+  const removable = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Rascunho descartável", participants: [] } });
+  const removableId = removable.data.draw.id;
+  assert.equal((await api(`/api/admin/draws/${removableId}`, { method: "DELETE", body: { name: "Rascunho descartável" } })).response.status, 401);
+  assert.equal((await api(`/api/admin/draws/${removableId}`, { method: "DELETE", cookie: admin.cookie })).response.status, 400);
+  assert.equal((await api(`/api/admin/draws/${removableId}`, { method: "DELETE", cookie: admin.cookie, body: { name: "Nome errado" } })).response.status, 409);
+  assert.equal((await api(`/api/admin/draws/${removableId}`, { method: "DELETE", cookie: admin.cookie, body: { name: "Rascunho descartável" } })).response.status, 200);
+  assert.equal((await api(`/api/admin/draws/${removableId}`, { method: "DELETE", cookie: admin.cookie, body: { name: "Rascunho descartável" } })).response.status, 404);
+  assert.equal((await api(`/api/inscricoes/${removableId}`)).response.status, 404);
+  assert.ok(!(await api("/api/admin/draws", { cookie: admin.cookie })).data.draws.some((draw) => draw.id === removableId));
+
   const first = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Novembro 2026", participants: people } });
   const second = await api("/api/admin/draws", { method: "POST", cookie: admin.cookie, body: { name: "Dezembro 2026", participants: people } });
   assert.equal(first.response.status, 201);
@@ -121,7 +131,11 @@ try {
   const otherRound = await signIn(people[0].email, b);
   assert.equal((await api(`/api/draws/${b}/pick`, { method: "POST", cookie: otherRound.cookie })).response.status, 200);
   assert.equal((await api(`/api/draws/${b}`)).data.draw.completed, 1);
-  console.log("Integration checks passed: signup review, publication gates, authentication, isolation, privacy, and concurrent picks.");
+  assert.equal((await api(`/api/admin/draws/${b}`, { method: "DELETE", cookie: admin.cookie, body: { name: "Dezembro 2026" } })).response.status, 200);
+  assert.equal((await api(`/api/draws/${b}`)).response.status, 404);
+  assert.equal((await api(`/api/draws/${b}/pick`, { method: "POST", cookie: otherRound.cookie })).response.status, 404);
+  assert.ok(!(await api("/api/admin/draws", { cookie: admin.cookie })).data.draws.some((draw) => draw.id === b));
+  console.log("Integration checks passed: signup review, deletion, publication gates, authentication, isolation, privacy, and concurrent picks.");
 } finally {
   await db.dropDatabase();
   await client.close();

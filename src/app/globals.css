@@ -315,3 +315,15 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4ede5;box-shadow:0 0 0 1000px #
   .registration-photo-left{left:-85px;top:0;width:155px;height:210px;opacity:.35}
   .registration-photo-right{right:-80px;bottom:0;width:155px;height:210px;opacity:.35}
 }
+
+.delete-area{border-top:1px solid var(--line);margin-top:24px;padding-top:12px}
+.danger-text{color:#e49595;padding-left:0}
+.danger-text:hover{color:#ffc0b6}
+.delete-confirm{background:#2d1b21;border:1px solid #78414d;border-radius:8px;padding:18px;margin-top:7px}
+.delete-confirm p{color:#e5c4bd;font-size:13px;line-height:1.6;margin-bottom:17px}
+.delete-confirm p strong{display:block;color:#fff0e8;font-size:15px}
+.delete-confirm input{max-width:420px}
+.delete-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.danger-button{background:#9e293e;color:#fff7f2}
+.danger-button:hover:not(:disabled){background:#ba354c}
+@media(max-width:700px){.delete-actions .button{flex:1}}

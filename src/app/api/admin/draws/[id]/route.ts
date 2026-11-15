@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { session } from "@/lib/auth";
 import { database, DRAW_COLLECTION } from "@/lib/db";
 import { Draw, publicDraw } from "@/lib/draw";
@@ -32,4 +33,21 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (draw) return NextResponse.json({ draw: publicDraw(draw) });
   }
   return NextResponse.json({ error: "O rascunho mudou durante a edição. Tente novamente." }, { status: 409 });
+}
+
+const deleteInput = z.object({ name: z.string() });
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  if ((await session())?.role !== "admin") return NextResponse.json({ error: "Acesso negado." }, { status: 401 });
+  const parsed = deleteInput.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Confirme o nome do sorteio para excluir." }, { status: 400 });
+  const { id } = await context.params;
+  const collection = (await database()).collection<Draw>(DRAW_COLLECTION);
+  const result = await collection.deleteOne({ _id: id, name: parsed.data.name });
+  if (result.deletedCount) return NextResponse.json({ deleted: true });
+  const exists = await collection.findOne({ _id: id }, { projection: { _id: 1 } });
+  return NextResponse.json(
+    { error: exists ? "O nome de confirmação não corresponde ao sorteio." : "Sorteio não encontrado." },
+    { status: exists ? 409 : 404 },
+  );
 }

@@ -30,6 +30,8 @@ export default function AdminPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -116,6 +118,30 @@ export default function AdminPage() {
     } catch { setMessage(`Copie este link: ${url}`); }
   }
 
+  function beginDelete(id: string) {
+    setDeleteTarget(id);
+    setDeleteName("");
+    setMessage("");
+  }
+
+  async function deleteDraw(draw: AdminDraw) {
+    if (deleteName !== draw.name) return;
+    setBusy(true); setMessage("");
+    try {
+      const response = await fetch(`/api/admin/draws/${draw.id}`, {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: deleteName }),
+      });
+      const data = await readApiResponse<object>(response);
+      if (!response.ok) throw new Error(data.error);
+      if (editor === draw.id) setEditor(null);
+      setDeleteTarget(null); setDeleteName("");
+      await load();
+      setMessage("Sorteio excluído. Os links de inscrição e participação não funcionam mais.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível excluir o sorteio."); }
+    finally { setBusy(false); }
+  }
+
   async function logout() { await fetch("/api/auth/logout", { method: "POST" }); location.reload(); }
 
   return <main className="shell app-shell">
@@ -155,6 +181,9 @@ export default function AdminPage() {
             <div className="card-actions"><button className="button secondary" onClick={() => start(draw)}>Editar lista</button><button className="button primary" disabled={busy || draw.participants < 2 || pending.length > 0} onClick={() => publish(draw)}>Publicar sorteio →</button></div>
             {(draw.participants < 2 || pending.length > 0) && <p className="publish-note">Para publicar, aprove pelo menos duas pessoas e revise todos os pedidos pendentes.</p>}
           </> : <><div className="progress"><span style={{ width: `${draw.completed / draw.participants * 100}%` }} /></div><div className="card-actions"><Link className="button secondary" href={`/s/${draw.id}`}>Abrir página ↗</Link><button className="button primary" onClick={() => void copyLink(draw.id, "participation")}>Copiar link ↗</button></div></>}
+          <div className="delete-area">
+            {deleteTarget === draw.id ? <div className="delete-confirm"><p><strong>Excluir “{draw.name}”?</strong> Participantes, inscrições e resultados serão apagados. Os links deixarão de funcionar.</p><label htmlFor={`delete-name-${draw.id}`}>Digite o nome do sorteio para confirmar</label><input id={`delete-name-${draw.id}`} value={deleteName} onChange={(event) => setDeleteName(event.target.value)} autoComplete="off" /><div className="delete-actions"><button className="button secondary" disabled={busy} onClick={() => { setDeleteTarget(null); setDeleteName(""); }}>Cancelar</button><button className="button danger-button" disabled={busy || deleteName !== draw.name} onClick={() => void deleteDraw(draw)}>{busy ? "Excluindo..." : "Excluir definitivamente"}</button></div></div> : <button className="text-button danger-text" disabled={busy} onClick={() => beginDelete(draw.id)}>Excluir sorteio</button>}
+          </div>
         </article>;
       }) : <div className="empty-state"><div className="big-symbol">✦</div><h2>Nenhuma conspiração registrada.</h2><p>Crie um rascunho e compartilhe o link de inscrição. Deixe que os suspeitos façam o cadastro.</p><button className="button primary" onClick={() => start()}>Criar sorteio →</button></div>}</div>
     </div>}
