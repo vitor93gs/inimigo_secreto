@@ -4,6 +4,7 @@ import { z } from "zod";
 import { database, DRAW_COLLECTION } from "@/lib/db";
 import { Draw, normalizeEmail } from "@/lib/draw";
 import { newToken, tokenDigest } from "@/lib/auth";
+import { emailSendError } from "@/lib/email-error";
 
 const input = z.object({ email: z.email(), drawId: z.string().optional() });
 const generic = { message: "Se este email estiver autorizado, você receberá um link em instantes." };
@@ -23,6 +24,12 @@ export async function POST(request: NextRequest) {
   if (missing.length) {
     console.error(`Configuração de email incompleta: ${missing.join(", ")}`);
     return NextResponse.json({ error: "O acesso por email ainda não foi configurado neste ambiente.", code: "CONFIGURATION_ERROR" }, { status: 503 });
+  }
+  const from = process.env.EMAIL_FROM!;
+  const senderAddress = from.match(/<([^<>]+)>\s*$/)?.[1] || from;
+  if (/[\r\n]/.test(from) || !z.email().safeParse(senderAddress.trim()).success) {
+    console.error("EMAIL_FROM inválido: use um endereço em uma única linha, sem quebras de linha.");
+    return NextResponse.json({ error: "EMAIL_FROM deve ser um endereço de email em uma única linha, sem quebras de linha.", code: "INVALID_SENDER" }, { status: 503 });
   }
   const email = normalizeEmail(parsed.data.email);
   const drawId = parsed.data.drawId;
@@ -58,7 +65,7 @@ export async function POST(request: NextRequest) {
   const safeName = drawName.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
   try {
     const result = await new Resend(process.env.RESEND_API_KEY!).emails.send({
-      from: process.env.EMAIL_FROM!,
+      from,
       to: email,
       subject: `Seu acesso ao ${drawName}`,
       html: `<p>Seu link para acessar <strong>${safeName}</strong>:</p><p><a href="${url.toString()}">Entrar no Amigo Secreto</a></p><p>O link vale por 15 minutos e só pode ser usado uma vez.</p>`,
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await db.collection("loginTokens").deleteOne({ digest });
     console.error("Falha no envio do link de acesso:", error);
-    return NextResponse.json({ error: "Não foi possível enviar o email. Tente novamente." }, { status: 503 });
+    return NextResponse.json({ error: emailSendError(error), code: "EMAIL_SEND_FAILED" }, { status: 503 });
   }
   return NextResponse.json(generic);
   } catch (error) {

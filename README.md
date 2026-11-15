@@ -22,7 +22,7 @@ Importe este repositório na Vercel e configure estas variáveis em **Project Se
 | `ADMIN_EMAIL` | `vitor93gs@gmail.com` |
 | `SESSION_SECRET` | Segredo aleatório com pelo menos 32 caracteres; pode ser diferente do local. |
 | `RESEND_API_KEY` | Chave de API do Resend. |
-| `EMAIL_FROM` | Remetente no domínio verificado no Resend, por exemplo `Amigo Secreto <acesso@seu-dominio.com>`. |
+| `EMAIL_FROM` | Remetente no domínio verificado no Resend, por exemplo `Amigo Secreto <acesso@seu-dominio.com>`. Insira em uma única linha, sem aspas nem quebras de linha. |
 | `APP_URL` | `https://inimigosecreto.vercel.app` |
 
 Depois de salvar as variáveis, faça um **Redeploy** da implantação de produção; alterações nas variáveis não atualizam implantações anteriores. O endereço de `EMAIL_FROM` precisa pertencer ao domínio verificado no Resend. Libere acesso do ambiente Vercel ao MongoDB Atlas conforme a configuração de rede do cluster. Não publique `.env.local`.
