@@ -53,6 +53,6 @@ export default function Home() {
       </div>
     </section>
 
-    <footer className="footer">Amizades podem acabar. Um presente ruim vira lenda. <span>✦</span></footer>
+    <footer className="footer"><p>Amizades podem acabar. Um presente ruim vira lenda. <span>✦</span></p><Link href="/sac">SAC ↗</Link></footer>
   </main>;
 }

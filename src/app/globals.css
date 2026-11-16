@@ -360,3 +360,27 @@ a.toplink{display:inline-flex;align-items:center;min-height:44px}
   .registration-panel h1{font-size:37px}
   .head-actions{gap:8px}
 }
+
+.footer{align-items:center;gap:16px}
+.footer p{margin:0}
+.footer a{color:var(--orange);font-weight:800;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+.footer a:hover{color:#ffd09b}
+.sac-page{overflow-x:clip}
+.sac-stage{max-width:760px;min-height:calc(100vh - 90px);margin:0 auto;padding:clamp(70px,10vw,130px) 0 90px;text-align:center}
+.sac-stage h1{font-family:var(--font-serif),Georgia,serif;font-size:clamp(44px,7vw,76px);font-weight:600;letter-spacing:-.065em;line-height:1.06;margin:17px 0 20px}
+.sac-intro{max-width:470px;margin:0 auto 34px;color:var(--muted);font-size:17px;line-height:1.65}
+.sac-trigger{list-style:none;margin:0 auto;min-width:225px}
+.sac-trigger::-webkit-details-marker{display:none}
+.sac-trigger::marker{content:""}
+.sac-label-open{display:none}
+.sac-disclosure[open] .sac-label-closed{display:none}
+.sac-disclosure[open] .sac-label-open{display:inline}
+.sac-reveal{display:flex;flex-direction:column;align-items:center;gap:26px;margin:34px auto 0}
+.sac-image{display:block;max-width:100%;height:auto}
+@media(max-width:700px){
+  .sac-stage{min-height:calc(100svh - 74px);padding:66px 0 75px}
+  .sac-stage h1{font-size:clamp(40px,10vw,54px)}
+  .sac-intro{font-size:16px}
+  .sac-trigger{width:min(100%,340px)}
+  .sac-reveal{gap:18px;margin-top:26px}
+}
